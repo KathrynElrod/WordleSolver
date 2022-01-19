@@ -14,7 +14,8 @@ class WordleSolver:
   yellow_letters = [[], [], [], [], []]
   grey_letters = []
   
-  empties = 0
+  empties = 5
+  prev_empties = 0
   guess_num = 1
   have_searched_uniques = False
   
@@ -31,6 +32,7 @@ class WordleSolver:
       
       # Prompt
       squares = ''
+      self.prev_empties = self.empties
       self.empties = 0
       found_invalid = False
       for index, letter in enumerate(self.guess):
@@ -90,7 +92,7 @@ class WordleSolver:
   
   # Decide what word to guess next
   def make_guess(self):
-    if self.guess_num<(self.MAX_NUM_GUESSES-1) and self.empties<(self.MAX_NUM_GUESSES/2) and not self.have_searched_uniques:
+    if self.guess_num<(self.MAX_NUM_GUESSES-1) and self.empties==self.prev_empties and not self.have_searched_uniques: # removed {self.empties<(self.MAX_NUM_GUESSES/2) or }
       possible_guesses = self.make_next_guess(True)
       if len(possible_guesses) > (self.MAX_NUM_GUESSES-self.guess_num):
         # There are more possibilities than guesses remaining
