@@ -14,8 +14,8 @@ class WordleSolver:
   yellow_letters = [[], [], [], [], []]
   grey_letters = []
   
-  empties = 5
-  prev_empties = 0
+  empties = 0
+  prev_empties = 5
   guess_num = 1
   have_searched_uniques = False
   
