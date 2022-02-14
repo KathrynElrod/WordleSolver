@@ -1,29 +1,30 @@
 class WordleSolver:
-  # Number of guesses in a game
-  MAX_NUM_GUESSES = 6
-  
-  # List of 5-letter words, sorted by commonalityma
-  with open('words.txt') as file:
-    WORDS = [line.strip() for line in file.readlines()]
-  
-  # Initial guess
-  guess = 'tears'
-  
-  # Knowledge base
-  green_letters = [None, None, None, None, None]
-  yellow_letters = [[], [], [], [], []]
-  grey_letters = []
-  
-  empties = 0
-  prev_empties = 5
-  guess_num = 1
-  have_searched_uniques = False
-  
   def __init__(self, verbose=False):
+    # Number of guesses in a game
+    self.MAX_NUM_GUESSES = 6
+    
+    # List of 5-letter words, sorted by commonality
+    with open('words.txt') as file:
+      self.WORDS = [line.strip() for line in file.readlines()]
+    
+    # Initial guess
+    self.guess = 'tears'
+    
+    # Knowledge base
+    self.green_letters = [None, None, None, None, None]
+    self.yellow_letters = [[], [], [], [], []]
+    self.grey_letters = []
+    
+    # State variables
+    self.empties = 0
+    self.prev_empties = 5
+    self.guess_num = 1
+    self.have_searched_uniques = False
+    self.squares = ''
     self.verbose = verbose
   
   def start(self):
-    print('🟩:g  🟨:y  ⬜:↵  🚫:x')
+    print('[ 🟩:g  🟨:y  ⬜:↵  🚫:x ]')
     if self.verbose:
       print('[*] Starting with pre-defined word "'+self.guess+'"')
     while self.guess_num <= self.MAX_NUM_GUESSES:
@@ -31,19 +32,18 @@ class WordleSolver:
       print('Guess '+str(self.guess_num)+': '+self.guess.upper())
       
       # Prompt
-      squares = ''
       self.prev_empties = self.empties
       self.empties = 0
       found_invalid = False
       for index, letter in enumerate(self.guess):
         # Fill in known letters
         if self.green_letters[index]==letter:
-          print(letter.upper()+'= g')
-          squares += '🟩'
+          print(letter.upper()+': ▒')
+          self.squares += '▒▒'
           continue
         elif letter in self.yellow_letters[index]:
-          print(letter.upper()+'= y')
-          squares += '🟨'
+          print(letter.upper()+': ░')
+          self.squares += '░░'
           continue
         
         # Ask about unknown letters
@@ -54,28 +54,31 @@ class WordleSolver:
           break
         elif color=='g':
           self.green_letters[index] = letter
-          squares += '🟩'
+          self.squares += '▒▒'
         elif color=='y':
           self.yellow_letters[index].append(letter)
-          squares += '🟨'
+          self.squares += '░░'
         else:
           self.grey_letters.append(letter)
-          squares += '⬜'
+          self.squares += '  '
           self.empties += 1
+      self.squares += '\n'
       
       if found_invalid:
         print('"'+self.guess+'" marked as invalid word')
         self.WORDS.remove(self.guess)
         self.guess = self.make_guess()
         continue
-      print(squares)
       
-      # Did we lose?
+      # Did we finish?
       if all(self.green_letters):
-        print('Wordle solved!')
+        print('\nWordle solved!')
+        print('Word is: '+''.join(self.green_letters).upper())
+        self.print_graphic()
         break
       if self.guess_num>=self.MAX_NUM_GUESSES:
         print('Wordle failed :(')
+        self.print_graphic()
         break
       else:
         print()
@@ -90,9 +93,15 @@ class WordleSolver:
       self.guess = self.make_guess()
       self.guess_num += 1
   
+  def print_graphic(self):
+    print('┌────────────┐')
+    for line in self.squares.splitlines():
+      print('│ '+line+' │')
+    print('└────────────┘')
+  
   # Decide what word to guess next
   def make_guess(self):
-    if self.guess_num<(self.MAX_NUM_GUESSES-1) and self.empties==self.prev_empties and not self.have_searched_uniques: # removed {self.empties<(self.MAX_NUM_GUESSES/2) or }
+    if self.guess_num<(self.MAX_NUM_GUESSES-1) and self.empties==self.prev_empties and not self.have_searched_uniques:
       possible_guesses = self.make_next_guess(True)
       if len(possible_guesses) > (self.MAX_NUM_GUESSES-self.guess_num):
         # There are more possibilities than guesses remaining
@@ -130,7 +139,6 @@ class WordleSolver:
       for letter in word:
         if word.count(letter)>1:
           duplicate = True
-          break
         if letter in find_letters:
           count += 1
       if duplicate:
@@ -139,7 +147,7 @@ class WordleSolver:
         best_word = (word, count)
     
     # If we found one, return it
-    if best_word[1]:
+    if best_word[1]>2:
       if self.verbose:
         print('[*] Found: "'+best_word[0]+'" with '+str(best_word[1])+' letters')
       self.have_searched_uniques = True
@@ -162,6 +170,7 @@ class WordleSolver:
       return guesses
     else:
       print('No word found :(')
+      self.print_graphic()
       exit()
   
   # Determine if a given word fits the kbase
@@ -184,6 +193,10 @@ class WordleSolver:
     
     return True
 
-solver = WordleSolver()
-solver.start()
+if __name__=='__main__':
+  choice = input('Run verbose? ')
+  verbose = choice and choice.lower()[0]=='y'
+  print('▔▔▔▔▔▔▔▔▔▔▔▔' + ((1+len(choice))*'▔' if choice else '') )
+  solver = WordleSolver(verbose)
+  solver.start()
 
